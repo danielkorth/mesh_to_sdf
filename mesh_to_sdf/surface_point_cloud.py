@@ -1,14 +1,17 @@
-from .scan import Scan, get_camera_transform_looking_at_origin
-from .utils import sample_uniform_points_in_unit_sphere
-from .utils import get_raster_points, check_voxels
+import logging
 
 import trimesh
-import logging
+
+from .scan import Scan, get_camera_transform_looking_at_origin
+from .utils import check_voxels, get_raster_points, sample_uniform_points_in_unit_sphere
+
 logging.getLogger("trimesh").setLevel(9000)
-import numpy as np
-from sklearn.neighbors import KDTree
 import math
+
+import numpy as np
 import pyrender
+from sklearn.neighbors import KDTree
+
 
 class BadMeshException(Exception):
     pass
@@ -106,8 +109,8 @@ class SurfacePointCloud:
         query_points = []
         surface_sample_count = int(number_of_points * 47 / 50) // 2
         surface_points = self.get_random_surface_points(surface_sample_count, use_scans=use_scans)
-        query_points.append(surface_points + np.random.normal(scale=0.0025, size=(surface_sample_count, 3)))
-        query_points.append(surface_points + np.random.normal(scale=0.00025, size=(surface_sample_count, 3)))
+        query_points.append(surface_points + np.random.normal(scale=np.sqrt(0.0025), size=(surface_sample_count, 3)))
+        query_points.append(surface_points + np.random.normal(scale=np.sqrt(0.00025), size=(surface_sample_count, 3)))
         
         unit_sphere_sample_count = number_of_points - surface_points.shape[0] * 2
         unit_sphere_points = sample_uniform_points_in_unit_sphere(unit_sphere_sample_count)
@@ -183,6 +186,9 @@ def sample_from_mesh(mesh, sample_point_count=10000000, calculate_normals=True):
 
     return SurfacePointCloud(mesh, 
         points=points,
+        normals=normals if calculate_normals else None,
+        scans=None
+    )
         normals=normals if calculate_normals else None,
         scans=None
     )
